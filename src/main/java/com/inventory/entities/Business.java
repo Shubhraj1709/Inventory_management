@@ -3,7 +3,7 @@ package com.inventory.entities;
 import java.time.LocalDate;
 
 import com.inventory.enums.PaymentStatus;
-import com.inventory.enums.SubscriptionPlan;
+import com.inventory.enums.SubscriptionLevel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,7 +29,7 @@ public class Business {
     private String ownerPassword;
 
     @Enumerated(EnumType.STRING)
-    private SubscriptionPlan subscriptionPlan;
+    private SubscriptionLevel subscriptionPlan;
     
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
@@ -39,7 +39,11 @@ public class Business {
 
     private int maxUsers;
     
-    @ManyToOne
+//    @OneToOne(mappedBy = "business")
+//    private BusinessOwner businessOwner;
+
+    
+    @OneToOne
     @JoinColumn(name = "business_owner_id", nullable = false) // Make sure it matches your DB schema
     private BusinessOwner businessOwner;
 

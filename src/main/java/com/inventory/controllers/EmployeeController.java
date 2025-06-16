@@ -23,7 +23,7 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_OWNER')") // restrict if needed
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_OWNER','EMPLOYEE')") // restrict if needed
     public ResponseEntity<List<EmployeeDTO>> getAllEmployees() {
         return ResponseEntity.ok(employeeService.getAllEmployees());
     }
@@ -33,6 +33,13 @@ public class EmployeeController {
         employeeService.updateEmployee(id, request);
         return ResponseEntity.ok().body(Map.of("message", "Permissions updated successfully"));
     }
+    
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
+        employeeService.deleteEmployeeById(id);
+        return ResponseEntity.ok().build();
+    }
+
     
     
 

@@ -12,6 +12,7 @@ import com.inventory.repositories.BusinessRepository;
 import com.inventory.repositories.CategoryRepository;
 import com.inventory.repositories.ProductRepository;
 import com.inventory.repositories.WarehouseRepository;
+import com.inventory.security.SubscriptionPermissionChecker;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +37,8 @@ public class ProductService {
         BusinessOwner owner = businessOwnerRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
 
+        SubscriptionPermissionChecker.checkAddEditPermission(owner); // 🔥 Check here
+
         if (!business.getBusinessOwner().getId().equals(owner.getId())) {
             throw new IllegalArgumentException("Business does not belong to this owner.");
         }
@@ -56,6 +59,10 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
+        BusinessOwner owner = product.getBusiness().getBusinessOwner();
+
+        SubscriptionPermissionChecker.checkAddEditPermission(owner);
+        
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());

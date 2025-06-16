@@ -27,6 +27,10 @@ public class NotificationService {
         return notificationRepository.findByReadFalse();
     }
 
+    public List<Notification> getAllNotifications() {
+        return notificationRepository.findAllByOrderByTimestampDesc();
+    }
+
     public void markAsRead(Long id) {
         notificationRepository.findById(id).ifPresent(notification -> {
             notification.setRead(true);
@@ -39,4 +43,22 @@ public class NotificationService {
         // Logic to fetch pending invoices and create notifications
         createNotification("Reminder: You have pending invoices!", NotificationType.PENDING_INVOICE, null);
     }
+    
+    public void updateNotificationMessageByType(NotificationType type, String newMessage) {
+        List<Notification> notifications = notificationRepository.findByTypeAndReadFalse(type);
+        for (Notification notification : notifications) {
+            notification.setMessage(newMessage);
+            notificationRepository.save(notification);
+        }
+    }
+    
+    public void updateNotificationMessageByReference(NotificationType type, Long referenceId, String newMessage) {
+        List<Notification> notifications = notificationRepository.findByTypeAndReferenceIdAndReadFalse(type, referenceId);
+        for (Notification notification : notifications) {
+            notification.setMessage(newMessage);
+            notificationRepository.save(notification);
+        }
+    }
+
+
 }

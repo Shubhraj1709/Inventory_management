@@ -87,6 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("Extracted token: " + token);
         System.out.println("Username from token: " + username);
         System.out.println("Is token valid? " + jwtTokenProvider.validateToken(token, username));
+        
 
     }
     

@@ -5,6 +5,7 @@ import com.inventory.dto.InvoiceItemDTO;
 import com.inventory.dto.InvoiceRequest;
 import com.inventory.entities.Invoice;
 import com.inventory.entities.Order;
+import com.inventory.enums.NotificationType;
 import com.inventory.enums.PaymentStatus;
 import com.inventory.exceptions.ResourceNotFoundException;
 import com.inventory.repositories.InvoiceRepository;
@@ -21,10 +22,12 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
-    public InvoiceService(InvoiceRepository invoiceRepository, OrderRepository orderRepository) {
+    public InvoiceService(InvoiceRepository invoiceRepository, OrderRepository orderRepository, NotificationService notificationService) {
         this.invoiceRepository = invoiceRepository;
         this.orderRepository = orderRepository;
+        this.notificationService = notificationService;
     }
 
     public InvoiceDTO generateInvoice(Long orderId, double taxRate, double discount) {
@@ -49,7 +52,7 @@ public class InvoiceService {
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
         return new InvoiceDTO(
-        		null,
+        	    invoice.getId(),
                 savedInvoice.getInvoiceNumber(),
                 savedInvoice.getTotalAmount(),
                 savedInvoice.getTaxAmount(),
@@ -73,6 +76,15 @@ public class InvoiceService {
         invoice.setPaymentStatus(PaymentStatus.PAID);
         invoiceRepository.save(invoice);
 
+        notificationService.updateNotificationMessageByType(
+                NotificationType.PENDING_INVOICE,
+                "Invoice paid. Thank you!"
+                );
+        notificationService.updateNotificationMessageByReference(
+                NotificationType.PENDING_INVOICE,
+                invoiceId,
+                "Invoice #" + invoiceId + " has been paid. Thank you!"
+            );
         return new InvoiceDTO(
         		invoice.getId(), 
                 invoice.getInvoiceNumber(),
@@ -85,6 +97,8 @@ public class InvoiceService {
                 null,
                 null
         );
+        
+        
     }
     
     public void processUnpaidInvoices() {
@@ -105,7 +119,7 @@ public class InvoiceService {
         List<Invoice> invoices = invoiceRepository.findAll();
 
         return invoices.stream().map(invoice -> new InvoiceDTO(
-        		null,
+        	    invoice.getId(),
                 invoice.getInvoiceNumber(),
                 invoice.getTotalAmount(),
                 invoice.getTaxAmount(),

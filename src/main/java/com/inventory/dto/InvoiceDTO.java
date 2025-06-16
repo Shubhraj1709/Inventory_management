@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InvoiceDTO {
-    private Long id; // 
+    private Long id; 
     
     private String invoiceNumber;
     private double totalAmount;

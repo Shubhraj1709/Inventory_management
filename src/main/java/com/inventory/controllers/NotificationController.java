@@ -28,5 +28,11 @@ public class NotificationController {
         notificationService.markAsRead(id);
         return ResponseEntity.ok("Notification marked as read.");
     }
+    
+    @GetMapping
+    public ResponseEntity<List<Notification>> getAllNotifications() {
+        return ResponseEntity.ok(notificationService.getAllNotifications());
+    }
+
 }
 

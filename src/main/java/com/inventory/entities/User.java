@@ -1,6 +1,7 @@
 package com.inventory.entities;
 
 import com.inventory.enums.Role;
+import com.inventory.enums.SubscriptionLevel;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,7 +31,7 @@ public class User {
     private Role role;
 
     @ManyToOne
-    @JoinColumn(name = "business_owner_id")
+    @JoinColumn(name = "business_owner_id", nullable = false)
     private BusinessOwner businessOwner;
  
     @ManyToOne
@@ -43,5 +44,24 @@ public class User {
     public String getPassword() {
         return passwordHash;  // Return passwordHash as password
     }
+    
+//    @Column(name = "subscription_plan")
+//    @Enumerated(EnumType.STRING)
+//    private SubscriptionLevel subscriptionPlan;
+    
+    @Column(name = "subscription_plan")
+    private String subscriptionPlan;  // ✅ stores "BASIC", "PREMIUM", "ENTERPRISE"
 
+
+    @Column(name = "plan_start")
+    private java.time.LocalDate planStart;
+
+    @Column(name = "plan_end")
+    private java.time.LocalDate planEnd;
+
+    public SubscriptionLevel getSubscriptionLevelEnum() {
+        return SubscriptionLevel.fromDbValue(this.subscriptionPlan);
+    }
+
+    
 }

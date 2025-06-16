@@ -17,8 +17,8 @@ public class BusinessRequest {
     @NotBlank
     private String ownerName;
 
-    @Email
     @NotBlank
+    @Email
     private String email;
 
     @NotBlank
@@ -26,12 +26,8 @@ public class BusinessRequest {
 
     @NotBlank
     private String subscriptionPlan;
+    
+    private String role; // e.g., "BUSINESS_OWNER"
+    
 }
 
-
-//    private String name;
-//    private String ownerName;
-//    private String email;
-//    private String address;
-//    private String password;  // Add this field
-//    private String subscriptionPlan;  // Add this field

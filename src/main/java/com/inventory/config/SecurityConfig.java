@@ -2,6 +2,7 @@ package com.inventory.config;
 
 import com.inventory.enums.Role;
 import com.inventory.security.CustomPermissionEvaluator;
+import com.inventory.security.SubscriptionCheckFilter;
 import com.inventory.services.UserDetailsServiceImpl;
 
 import lombok.RequiredArgsConstructor;
@@ -38,13 +39,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    private final SubscriptionCheckFilter subscriptionCheckFilter;
 
-    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+
+//    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+//            @Lazy SubscriptionCheckFilter subscriptionCheckFilter) {
+//this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+//this.subscriptionCheckFilter = subscriptionCheckFilter;
+//}
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,12 +62,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
             	.requestMatchers("/auth/**").permitAll()
             	.requestMatchers("/admin/register-business").permitAll()
+            	.requestMatchers("/test/check-expiry").permitAll() 
                .requestMatchers("/admin/**").hasRole("ADMIN")
   //              .requestMatchers("/admin/**").hasRole("FIRM_ADMIN")
                //.requestMatchers("/invoices/**").hasRole("ADMIN")
 
                //.requestMatchers(HttpMethod.PUT, "/employee/update/**").hasRole("ADMIN") // ✅ Add this
                
+               .requestMatchers("/premium-feature/**").hasAnyAuthority("ROLE_PREMIUM_ACCESS")
+               .requestMatchers("/free-feature/**").hasAnyAuthority("ROLE_FREE_ACCESS")
+
                //.requestMatchers("/invoices/**").hasRole("ADMIN")
                .requestMatchers(HttpMethod.GET, "/invoices/**").hasAnyRole("ADMIN", "BUSINESS_OWNER")
                .requestMatchers(HttpMethod.GET, "/invoices/send-invoice/**").hasAnyRole("ADMIN", "BUSINESS_OWNER")
@@ -74,10 +85,12 @@ public class SecurityConfig {
 
                 .requestMatchers("/business/**").hasRole("BUSINESS_OWNER")
                 
-                .requestMatchers(HttpMethod.GET, "/employee/all").hasAnyRole("ADMIN", "BUSINESS_OWNER")
+                .requestMatchers(HttpMethod.GET, "/employee/all").hasAnyRole("ADMIN", "BUSINESS_OWNER", "EMPLOYEE")
                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
-                .requestMatchers(HttpMethod.PUT, "/employee/update/**").hasAnyRole("ADMIN", "EMPLOYEE")
-                
+                .requestMatchers(HttpMethod.PUT, "/employee/update/**").hasAnyAuthority("ADMIN", "EMPLOYEE")
+                .requestMatchers(HttpMethod.DELETE, "/employee/delete/**").hasAnyAuthority("ADMIN","BUSINESS_OWNER","EMPLOYEE")
+                .requestMatchers(HttpMethod.POST, "/business/add-employee").hasAnyRole("BUSINESS_OWNER", "ADMIN","EMPLOYEE")
+
                 .requestMatchers(HttpMethod.POST, "/api/stocks/record").hasRole("BUSINESS_OWNER")
                 .requestMatchers(HttpMethod.GET, "/api/stocks/low-stock/**").hasAnyRole("BUSINESS_OWNER", "EMPLOYEE")
                 .requestMatchers(HttpMethod.POST, "/api/purchase-orders/create").hasRole("BUSINESS_OWNER")
@@ -91,12 +104,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("BUSINESS_OWNER")
                 .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("BUSINESS_OWNER")
 
+                .requestMatchers("/api/notifications/**").authenticated()  // ✅ corrected here
+
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             .authenticationProvider(authenticationProvider(userDetailsService(), passwordEncoder()))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        	.addFilterAfter(subscriptionCheckFilter, JwtAuthenticationFilter.class);
 
         http.exceptionHandling()
         .authenticationEntryPoint(authenticationEntryPoint());
@@ -126,12 +142,6 @@ public class SecurityConfig {
         return authProvider;
     }
 
-//    @Bean
-//    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(CustomPermissionEvaluator customEvaluator) {
-//        var handler = new DefaultMethodSecurityExpressionHandler();
-//        handler.setPermissionEvaluator(customEvaluator);
-//        return handler;
-//    }
 
     @Bean
     public UserDetailsService userDetailsService() {

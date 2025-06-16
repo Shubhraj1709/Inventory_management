@@ -3,6 +3,7 @@ package com.inventory.services;
 import com.inventory.dto.OrderDTO;
 import com.inventory.entities.BusinessOwner;
 import com.inventory.entities.Order;
+import com.inventory.enums.NotificationType;
 import com.inventory.repositories.OrderRepository;
 import com.inventory.repositories.BusinessOwnerRepository; // ✅ Add this import
 
@@ -18,10 +19,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final BusinessOwnerRepository businessOwnerRepository; // ✅ Declare repository
 
+    private final NotificationService notificationService;
 
-    public OrderService(OrderRepository orderRepository, BusinessOwnerRepository businessOwnerRepository) { // ✅ Inject repository
+
+    public OrderService(OrderRepository orderRepository, BusinessOwnerRepository businessOwnerRepository , NotificationService notificationService) { // ✅ Inject repository
         this.orderRepository = orderRepository;
         this.businessOwnerRepository = businessOwnerRepository;
+        this.notificationService = notificationService;
     }
 
     public OrderDTO createOrder(OrderDTO orderDTO) {
@@ -45,6 +49,13 @@ public class OrderService {
         Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         order.setOrderStatus(orderDTO.getOrderStatus());
         orderRepository.save(order);
+        
+        notificationService.createNotification(
+        	    "Order updated: ID #" + order.getId() + " now has status " + order.getOrderStatus(),
+        	    NotificationType.ORDER_UPDATE,
+        	    order.getId()
+        	);
+
         return new OrderDTO(order);
     }
 

@@ -3,9 +3,11 @@ package com.inventory.controllers;
 import com.inventory.dto.InvoiceDTO;
 import com.inventory.dto.InvoiceRequest;
 import com.inventory.entities.Invoice;
+import com.inventory.entities.User;
 import com.inventory.services.EmailService;
 import com.inventory.services.InvoiceService;
 import com.inventory.services.PdfGeneratorService;
+import com.inventory.services.PermissionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,6 +16,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.web.bind.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,10 +27,19 @@ public class InvoiceController {
     private final InvoiceService invoiceService;
     private final PdfGeneratorService pdfGeneratorService;
     private final EmailService emailService;
+    
+    
+    private final PermissionService permissionService;
+
 
     @PostMapping("/generate")
-    public ResponseEntity<InvoiceDTO> generateInvoice(@RequestBody InvoiceRequest request) {
-        return ResponseEntity.ok(invoiceService.generateInvoice(request));
+    public ResponseEntity<?> generateInvoice(@RequestBody InvoiceRequest request, @AuthenticationPrincipal User currentUser) {
+        if (!permissionService.hasPermission(currentUser, "invoices", "generate")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: insufficient subscription plan");
+        }
+
+        InvoiceDTO invoice = invoiceService.generateInvoice(request);
+        return ResponseEntity.ok(invoice);
     }
     
     @PreAuthorize("hasRole('ADMIN')")

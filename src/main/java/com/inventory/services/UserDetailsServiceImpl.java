@@ -75,32 +75,3 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         throw new UsernameNotFoundException("User not found with email: " + email);
     }
 }
-
-
-//@Override
-//public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-//    Optional<User> userOptional = userRepository.findByEmail(email);
-//    System.out.println("Loading user: " + email);
-//
-//    if (!userOptional.isPresent()) {
-//        throw new UsernameNotFoundException("User not found with email: " + email);
-//    }
-//
-//    User user = userOptional.get();
-//    
-//    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole().name());
-//
-//
-//    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-//    System.out.println("Password match: " + encoder.matches("firm123", user.getPasswordHash()));
-//
-//    System.out.println("User role: " + user.getRole().name());
-//    System.out.println("Loaded user: " + user.getEmail());
-//    System.out.println("Password in DB: " + user.getPasswordHash());
-//
-//    return org.springframework.security.core.userdetails.User.builder()
-//            .username(user.getEmail())
-//            .password(user.getPasswordHash()) // or getPassword() if the field is named that way
-//            .roles(user.getRole().name())     // Make sure it returns ADMIN, EMPLOYEE, etc.
-//            .build();
-//}

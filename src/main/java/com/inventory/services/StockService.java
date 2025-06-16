@@ -2,6 +2,7 @@ package com.inventory.services;
 
 import com.inventory.entities.*;
 import com.inventory.enums.MovementType;
+import com.inventory.enums.NotificationType;
 import com.inventory.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ public class StockService {
     private final ProductRepository productRepository;
     private final BusinessRepository businessRepository;
     private final WarehouseRepository warehouseRepository; // ✅ Add this
+    
+    private final NotificationService notificationService;
+
 
 
     public void recordStockMovement(Long productId, Long businessId, MovementType type, int quantity, String reason, Long warehouseId) {
@@ -52,6 +56,17 @@ public class StockService {
         System.out.println("Saving stock movement with warehouseId: " + warehouse.getId());
 
         System.out.println("StockMovement warehouse: " + movement.getWarehouse());
+        
+     // Check for low stock and create notification
+        int lowStockThreshold = 5; // or fetch from product config
+        if (isLowStock(productId, lowStockThreshold)) {
+            notificationService.createNotification(
+                "Low stock alert for product: " + product.getName(),
+                NotificationType.LOW_STOCK,
+                product.getId()
+            );
+        }
+
 
     }
 
