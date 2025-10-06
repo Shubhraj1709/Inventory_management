@@ -83,4 +83,9 @@ public class ProductService {
                 .map(p -> new ProductDTO(p.getId(), p.getName(), p.getDescription(), p.getPrice(), p.getStockQuantity(), p.getCategory()))
                 .collect(Collectors.toList());
     }
+    
+    public long countAllProducts() {
+        return productRepository.count();
+    }
+
 }

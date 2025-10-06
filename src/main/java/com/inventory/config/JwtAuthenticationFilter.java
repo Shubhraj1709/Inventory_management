@@ -61,11 +61,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7); // Remove "Bearer "
+        
         String username = jwtTokenProvider.extractUsername(token);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             // ✅ Step 1: Validate token
             if (jwtTokenProvider.validateToken(token, username)) {
+            	
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
 
                 // ✅ Step 2: Extract roles from token
                 var claims = jwtTokenProvider.extractAllClaims(token);

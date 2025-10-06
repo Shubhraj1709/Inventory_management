@@ -1,5 +1,6 @@
 package com.inventory.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.inventory.enums.SubscriptionLevel; // Ensure the enum is used
 
 import jakarta.persistence.*;
@@ -36,6 +37,7 @@ public class BusinessOwner {
     
     @OneToOne
     @JoinColumn(name = "business_id")
+    @JsonBackReference
     private Business business;
 
 

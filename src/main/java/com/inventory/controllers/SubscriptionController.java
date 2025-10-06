@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.inventory.dto.SubscriptionDTO;
 import com.inventory.entities.Subscription;
 import com.inventory.security.SubscriptionGuard;
 import com.inventory.services.PaymentService;
@@ -30,9 +31,25 @@ public class SubscriptionController {
     }
 
     @GetMapping("/business/{businessId}")
-    public ResponseEntity<Subscription> getSubscription(@PathVariable Long businessId) {
-    	return ResponseEntity.ok(subscriptionService.getSubscriptionByBusiness(businessId));
+    public ResponseEntity<SubscriptionDTO> getSubscription(@PathVariable Long businessId) {
+        Subscription subscription = subscriptionService.getSubscriptionByBusiness(businessId);
+
+        if (subscription == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        SubscriptionDTO dto = new SubscriptionDTO(
+            subscription.getId(),
+            subscription.getPlan() != null ? subscription.getPlan().getName() : null,
+            subscription.getPlan() != null ? subscription.getPlan().getPrice() : null,
+            subscription.getStartDate(),
+            subscription.getEndDate(),
+            subscription.isActive()
+        );
+
+        return ResponseEntity.ok(dto);
     }
+
 
     @PostMapping("/pay/{amount}")
     public ResponseEntity<String> createPayment(@PathVariable BigDecimal amount) {

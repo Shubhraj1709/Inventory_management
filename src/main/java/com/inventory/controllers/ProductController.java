@@ -51,7 +51,7 @@ public class ProductController {
         return ResponseEntity.ok("Product deleted successfully!");
     }
 
-   // @PreAuthorize("hasAnyRole('EMPLOYEE', 'BUSINESS_OWNER')")
+   // @PreAuthorize("hasAnyRole('EMPLOYEE', 'BUSINESS_OWNER' , 'ADMIN')")
     @GetMapping("/all/{businessId}")
     public ResponseEntity<List<ProductDTO>> getAllProducts(@PathVariable Long businessId) {
         return ResponseEntity.ok(productService.getAllProducts(businessId));

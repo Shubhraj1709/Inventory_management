@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Getter
 @Setter
@@ -18,6 +20,7 @@ public class Subscription {
 
     @ManyToOne
     @JoinColumn(name = "business_owner_id" , nullable = false) // Ensure this matches your BusinessOwner
+    @JsonManagedReference
     private BusinessOwner businessOwner; // Change from Business to BusinessOwner
 
 

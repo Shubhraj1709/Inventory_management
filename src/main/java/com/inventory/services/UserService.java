@@ -9,4 +9,10 @@ public interface UserService {
     Optional<User> getUserByEmail(String email);
     List<User> getAllUsers();
     void deleteUser(Long id);
+    
+ // New method for subscriptions
+    void assignPlan(Long userId, String planType); // NEW
+    
+    Optional<User> findByEmail(String email);
+
 }

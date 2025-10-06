@@ -7,14 +7,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.inventory.entities.Business;
 import com.inventory.entities.BusinessOwner;
 import com.inventory.entities.User;
 import com.inventory.enums.Role;
+import com.inventory.enums.SubscriptionLevel;
 import com.inventory.exceptions.ResourceNotFoundException;
 import com.inventory.repositories.BusinessOwnerRepository;
+import com.inventory.repositories.BusinessRepository;
 import com.inventory.repositories.UserRepository;
 
 import com.inventory.dto.UserDTO;
+import com.inventory.dto.BusinessOwnerDTO;
+import com.inventory.dto.BusinessOwnerRequest;
 import com.inventory.dto.EmployeeRequest;
 import com.inventory.dto.EmployeeUpdateRequest;
 
@@ -22,6 +27,7 @@ import com.inventory.entities.UserPermission;
 	
 
 import lombok.RequiredArgsConstructor;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -29,6 +35,11 @@ import lombok.RequiredArgsConstructor;
 public class BusinessOwnerService {
 
     private final UserRepository userRepository;
+    
+    private final BusinessOwnerRepository businessOwnerRepository;
+    private final BusinessRepository businessRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    
 
     public UserDTO addEmployee(EmployeeRequest request) {
         User user = new User();
@@ -72,6 +83,82 @@ public class BusinessOwnerService {
 
         user.setPermissions(permissionEntities);
         userRepository.save(user);
+    }
+    
+    
+    public BusinessOwnerDTO createBusinessOwner(BusinessOwnerRequest request) {
+        Business business = businessRepository.findById(request.getBusinessId())
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
+
+        BusinessOwner owner = new BusinessOwner();
+        owner.setBusinessName(request.getBusinessName());
+        owner.setName(request.getName());
+        owner.setEmail(request.getEmail());
+        owner.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        owner.setActive(true);
+        owner.setBusiness(business);
+        owner.setSubscriptionPlan(SubscriptionLevel.fromDbValue(request.getSubscriptionPlan()));
+
+        BusinessOwner saved = businessOwnerRepository.save(owner);
+        return new BusinessOwnerDTO(saved);
+    }
+
+    
+    
+    public List<BusinessOwnerDTO> getAllBusinessOwners() {
+        List<BusinessOwner> owners = businessOwnerRepository.findAll();
+        return owners.stream()
+                     .map(this::convertToDTO)
+                     .collect(Collectors.toList());
+    }
+
+    private BusinessOwnerDTO convertToDTO(BusinessOwner owner) {
+        BusinessOwnerDTO dto = new BusinessOwnerDTO();
+        dto.setId(owner.getId());
+        dto.setEmail(owner.getEmail());
+        dto.setName(owner.getName());
+        // add other fields
+        return dto;
+    }
+
+    
+    public BusinessOwnerDTO updateBusinessOwner(Long id, BusinessOwnerRequest request) {
+        BusinessOwner owner = businessOwnerRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Business owner not found"));
+
+        owner.setName(request.getName());
+        owner.setEmail(request.getEmail());
+        // Update other fields if needed
+
+        businessOwnerRepository.save(owner);
+
+        return mapToDTO(owner);
+    }
+
+    
+    public void deleteBusinessOwner(Long id) {
+        BusinessOwner owner = businessOwnerRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Business owner not found"));
+
+        // Optional: also delete associated User & Business
+        //businessOwnerRepository.delete(owner);
+        businessOwnerRepository.deleteById(id);
+
+    }
+    
+    private BusinessOwnerDTO mapToDTO(BusinessOwner owner) {
+        return new BusinessOwnerDTO(owner);
+    }
+
+
+ // BusinessOwnerService.java
+
+    public BusinessOwnerDTO getBusinessOwnerById(Long id) {
+        Optional<BusinessOwner> ownerOpt = businessOwnerRepository.findById(id);
+        if (ownerOpt.isEmpty()) return null;
+
+        BusinessOwner owner = ownerOpt.get();
+        return new BusinessOwnerDTO(owner.getId(), owner.getName(), owner.getEmail(), owner.getBusiness().getId());
     }
 
 }

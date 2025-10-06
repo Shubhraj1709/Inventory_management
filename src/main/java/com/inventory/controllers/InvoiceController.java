@@ -19,6 +19,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.web.bind.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.inventory.services.UserService;  // ✅ import
+
+
 @RestController
 @RequestMapping("/invoices")
 @RequiredArgsConstructor
@@ -30,10 +35,28 @@ public class InvoiceController {
     
     
     private final PermissionService permissionService;
+    private final UserService userService;   // ✅ add this line
 
 
+
+//    @PostMapping("/generate")
+//    public ResponseEntity<?> generateInvoice(@RequestBody InvoiceRequest request, @AuthenticationPrincipal User currentUser) {
+//        if (!permissionService.hasPermission(currentUser, "invoices", "generate")) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: insufficient subscription plan");
+//        }
+//
+//        InvoiceDTO invoice = invoiceService.generateInvoice(request);
+//        return ResponseEntity.ok(invoice);
+//    }
+    
     @PostMapping("/generate")
-    public ResponseEntity<?> generateInvoice(@RequestBody InvoiceRequest request, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<?> generateInvoice(@RequestBody InvoiceRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName(); // Spring Security principal (usually email/username)
+        
+        User currentUser = userService.getUserByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
         if (!permissionService.hasPermission(currentUser, "invoices", "generate")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: insufficient subscription plan");
         }
@@ -41,6 +64,7 @@ public class InvoiceController {
         InvoiceDTO invoice = invoiceService.generateInvoice(request);
         return ResponseEntity.ok(invoice);
     }
+
     
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/mark-paid/{invoiceId}")

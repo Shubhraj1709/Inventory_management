@@ -46,12 +46,6 @@ public class SecurityConfig {
     
     private final SubscriptionCheckFilter subscriptionCheckFilter;
 
-
-//    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
-//            @Lazy SubscriptionCheckFilter subscriptionCheckFilter) {
-//this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-//this.subscriptionCheckFilter = subscriptionCheckFilter;
-//}
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,6 +57,15 @@ public class SecurityConfig {
             	.requestMatchers("/auth/**").permitAll()
             	.requestMatchers("/admin/register-business").permitAll()
             	.requestMatchers("/test/check-expiry").permitAll() 
+            	
+            	.requestMatchers("/api/paypal/pay").permitAll()        // Payment creation
+                .requestMatchers("/api/paypal/success").permitAll()    // PayPal success redirect
+                .requestMatchers("/api/paypal/cancel").permitAll()     // PayPal cancel redirect
+                
+                .requestMatchers("/products/all/**").permitAll()
+                .requestMatchers("/api/orders").permitAll()
+
+                .requestMatchers("/api/paypal/success", "/api/paypal/cancel").permitAll()  // Make success & cancel publicly accessible if you don’t want to require auth
                .requestMatchers("/admin/**").hasRole("ADMIN")
   //              .requestMatchers("/admin/**").hasRole("FIRM_ADMIN")
                //.requestMatchers("/invoices/**").hasRole("ADMIN")
@@ -82,8 +85,18 @@ public class SecurityConfig {
 
                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+               
+             //08/05/2025
+               
+               .requestMatchers(HttpMethod.POST, "/business/add-business-owner").hasRole("ADMIN")
 
-                .requestMatchers("/business/**").hasRole("BUSINESS_OWNER")
+               .requestMatchers(HttpMethod.GET, "/business/all-business-owners").hasRole("ADMIN")
+               .requestMatchers(HttpMethod.PUT, "/business/update-business-owner/**").hasAnyRole("ADMIN", "BUSINESS_OWNER")
+               	.requestMatchers(HttpMethod.DELETE, "/business/delete-business-owner/**").hasRole("ADMIN")
+               	
+               	.requestMatchers(HttpMethod.GET, "/business/business-owner/**").hasRole("ADMIN")
+               	
+                .requestMatchers("/business/**").hasAnyAuthority("BUSINESS_OWNER", "ADMIN" )
                 
                 .requestMatchers(HttpMethod.GET, "/employee/all").hasAnyRole("ADMIN", "BUSINESS_OWNER", "EMPLOYEE")
                 .requestMatchers("/employee/**").hasRole("EMPLOYEE")
@@ -104,6 +117,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("BUSINESS_OWNER")
                 .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("BUSINESS_OWNER")
 
+
+                
                 .requestMatchers("/api/notifications/**").authenticated()  // ✅ corrected here
 
                 .anyRequest().authenticated()
